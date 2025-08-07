@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Súper Quetzal</title>
+
+  <style>
+    :root {
+      --primary: #14A344;
+      --secondary: #a5d6a7;
+      --danger: #e63946;
+    }
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      padding: 1rem;
+    }
+    .card {
+      background: white;
+      padding: 1rem;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .card img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+    }
+    .price-original {
+      text-decoration: line-through;
+      color: #999;
+      margin-right: 0.5rem;
+    }
+    .filtros {
+      padding: 1rem;
+    }
+    #cart-modal {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 2rem;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 10;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      border-radius: 8px;
+    }
+    #overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 5;
+    }
+    #checkmark {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: white;
+      color: var(--primary);
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
+      z-index: 20;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    #checkmark.show {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    #cart-items {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+    }
+    .modal-section {
+      margin-bottom: 1rem;
+    }
+    .remove-btn {
+      color: var(--danger);
+      background: transparent;
+      padding: 0 0.5rem;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    text-align: center;
+    padding: 0.5rem;
+  }
+
+  header img {
+    max-width: 60%;
+    height: auto;
+  }
+
+  header p {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+  }
+
+  .carrito,
+  header > div {
+    margin: 0.5rem 0;
+  }
+
+  .carrito i {
+    font-size: 2rem; 
+  }
+
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .card {
+    padding: 0.3rem;
+  }
+
+  .card img {
+    height: 90px;
+  }
+
+  #cart-modal {
+    top: 5%;
+    width: 95%;
+    padding: 1rem;
+  }
+
+  .modal-section input[type="text"] {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .card img {
+    height: 80px;
+  }
+
+  .card {
+    padding: 0.2rem;
+  }
+
+  .cart-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .modal-section input {
+    width: 100%;
+  }
+
+  header img {
+    max-width: 80px;
+  }
+
+  .carrito i {
+    font-size: 2.2rem;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <header>
+    <img src="LogoSQ-removebg-preview.png" width="240" height="200">
+
+    <p><img src="OIP-removebg-preview.png" width="20"/> Ubicados En: Calzada San Juan 39-14 zona 7, Colonia El Rodeo, Guatemala. </p> 
+
+    <div>
+      <button onclick="document.getElementById('contacto').scrollIntoView({behavior: 'smooth'})">Contactos</button>
+    </div>
+    <div class="carrito">
+      <button onclick="openCart()"><img src="descarga-removebg-preview.png" width="30" height="30"> <span id="cart-count">0</span></button>
+    </div>
+  </header>
+
+
+  <section class="filtros">
+    <label><input type="checkbox" id="show-offers" onchange="renderProducts()" /> Mostrar solo ofertas</label>
+  </section>
+
+  <section>
+    <div class="grid" id="products-grid"></div>
+  </section>
+
+  <div id="overlay" onclick="closeCart()"></div>
+  <div id="cart-modal">
+    <h2>Carrito</h2>
+    <div id="cart-items"></div>
+    <p>Total: Q<span id="cart-total">0.00</span></p>
+    <div class="modal-section">
+      <label><input type="radio" name="client-type" value="CF" checked /> CF</label>
+      <label><input type="radio" name="client-type" value="NIT" /> NIT</label>
+      <input type="text" id="nit-value" placeholder="Ingresa NIT" style="display:none; width:100%; margin-top:0.5rem; padding:0.5rem;" />
+    </div>
+    <button onclick="checkout()">Comprar</button>
+    <button onclick="closeCart()">Cerrar</button>
+  </div>
+
+  <div id="checkmark">✓ Compra finalizada</div>
+
+  <script>
+    const products = [
+    {name:'Sopa Pollo Fideos Knorr 55 g.', img:'https://dailymarket.com.gt/wp-content/uploads/2022/10/901008-KNORR-SOPA-POLLO-C-FIDEO-55-G.jpg', price:3.15, offer:true, originalPrice:4.00},
+    {name:'Sopa Laky Pollo Sobre 80 g', img:'https://tse1.mm.bing.net/th/id/OIP.sJu6k2NrdzRfEO8rIvDTKQAAAA?rs=1&pid=ImgDetMain&o=7&rm=3', price:2.65, offer:false},
+      {name:'Sopa Instantánea Pollo Laky Men 64 g', img:'https://i0.wp.com/superlacasita.com.gt/wp-content/uploads/2020/05/Abarrotes-Sopa-Laky-Men-Pollo-Vaso-64-g.jpg?w=600&ssl=1', price:4.30, offer:true, originalPrice:5.00},
+      {name:'Azúcar Morena De Caña 400 g', img:'https://d1cft8rz0k7w99.cloudfront.net/n/c/2/7/8/c278d862a68e364a19688ae14435a4201b01645f_Sugar_452345_01.jpg', price:3.60, offer:false},
+      {name:'Leche Entera Australian Pride 360 g', img:'https://cdn.kemik.gt/2023/03/139400120-AUSTRALIAN-1200X1200-1.-700x700.jpg', price:26.80, offer:true, originalPrice:30.00},
+      {name:'Leche Desarrollo 3+ Nido 800 g', img:'https://walmartni.vtexassets.com/arquivos/ids/410225/10196_01.jpg?v=638551852282830000', price:91.95, offer:false},
+      {name:'Azúcar Blanca Caña Real 500 g', img:'https://walmartgt.vtexassets.com/arquivos/ids/509544/Az-car-Ca-a-Real-Blanca-500g-1-16424.jpg?v=638468913901900000', price:4.40, offer:false},
+      {name:'Frijol Negro en Grano Chiper 400 g', img:'https://tse2.mm.bing.net/th/id/OIP.6bIVO5w5GEwx09Pk07EcEwHaHa?rs=1&pid=ImgDetMain&o=7&rm=3', price:7.15, offer:false},
+      {name:'Pasta Linguine Ina 200 g', img:'https://i0.wp.com/enlinea.lamodernahuehue.com/wp-content/uploads/2022/02/000753081002615.png?fit=720%2C724&ssl=1', price:4.30, offer:true, originalPrice:5.50},
+      {name:'Margarina Vegetal Mazola 400 g', img:'https://latorremx.vtexassets.com/arquivos/ids/160111/41279-frontal.jpg?v=637685244166570000', price:12.05, offer:false},
+      {name:'Aceite Vegetal Blend Mazola Doypack 400 ml', img:'https://latorremx.vtexassets.com/arquivos/ids/165145-800-auto?v=637691354843100000&width=800&height=auto&aspect=true', price:11.85, offer:false},
+      {name:'Sazón Completa Malher Bote 180 g', img:'https://latorremx.vtexassets.com/arquivos/ids/174585-800-auto?v=637828955523370000&width=800&height=auto&aspect=true', price:16.70, offer:true, originalPrice:18.50},
+      {name:'Sazonador Malher Bote 250 g', img:'https://latorremx.vtexassets.com/arquivos/ids/174597-800-auto?v=637828957395470000&width=800&height=auto&aspect=true', price:7.30, offer:false},
+      {name:'Preparado Hilachas Malher 58 g', img:'https://www.cocinamalher.com/sites/default/files/2021-10/Hilachas_0.png', price:7.30, offer:false},
+      {name:'Café Instantáneo Clasico 3 En 1 Nescafé Sobre 20g', img:'https://superxtrapanama.vtexassets.com/arquivos/ids/165029-800-auto?v=637943683050530000&width=800&height=auto&aspect=true', price:2.80, offer:true, originalPrice:3.50},
+      {name:'6 Pack Néctar Del Monte Surtido 200 ml', img:'https://tse3.mm.bing.net/th/id/OIP.5jxuE4TmqhMd-8EEdoCLxgHaHa?rs=1&pid=ImgDetMain&o=7&rm=3', price:17.10, offer:false},
+      {name:'Del Frutal Melocotón Lata 330ml', img:'https://latorremx.vtexassets.com/arquivos/ids/157937/201-frontal.jpg?v=637191044453570000', price:4.40, offer:false},
+      {name:'Arroz Precocido Macarena 400 g', img:'https://i2.wp.com/superlacasita.com.gt/wp-content/uploads/2020/11/Arroz-Precocido-Macarena-400-gr.jpg?fit=600%2C600&ssl=1', price:7.75, offer:true, originalPrice:8.50},
+      {name:'Salsa Soya Ina 148 ml', img:'https://chalosgrocery.com/assets/uploads/5158fcbf2005159f7022897364edd64d.jpg', price:6.25, offer:false},
+      {name:'Salsa Inglesa Ina 148 ml', img:'https://latorremx.vtexassets.com/arquivos/ids/163678-800-auto?v=637691352214130000&width=800&height=auto&aspect=true', price:6.55, offer:false},
+      {name:'Salsa Picante Campero 166 g', img:'https://i0.wp.com/enlinea.lamodernahuehue.com/wp-content/uploads/2021/07/007401182500150.png', price:2.80, offer:false},
+      {name:'Salsa Picante Hot Picamas 100 g', img:'https://walmartgt.vtexassets.com/arquivos/ids/504447/Salsa-Picam-s-Verde-Salsa-Picante-100g-2-13952.jpg?v=638459949744500000', price:4.90, offer:false},
+      {name:'Kétchup Campero 397 g', img:'https://elgranahorro.com.gt/wp-content/uploads/2022/04/901279-CAMPERO-KETCHUP-397G.jpg', price:13.65, offer:true, originalPrice:15.00},
+      {name:'Kétchup Kerns 375 g', img:'https://walmarthn.vtexassets.com/arquivos/ids/385022/Ketchup-Kerns-Pet-375gr-2-29380.jpg?v=638454009919370000', price:12.05, offer:false},
+      {name:'Maíz Dulce Grano Killios 432 g', img:'https://latorremx.vtexassets.com/arquivos/ids/162707/39191-frontal.jpg?v=637691351494930000', price:12.50, offer:false},
+      {name:'Sal Cebolla Polvo Malher Frasco 110 g', img:'https://latorremx.vtexassets.com/arquivos/ids/177666/2027610-frontal.jpg?v=637883957586630000', price:11.45, offer:false},
+      {name:'Sal Ajo Malher Frasco 110 g', img:'https://latorremx.vtexassets.com/arquivos/ids/180807/2027609-frontal.jpg?v=638025916446800000', price:11.45, offer:false},
+      {name:'Premezcla Panqueques Original Gold Medal 450 g', img:'https://latorremx.vtexassets.com/arquivos/ids/173010-800-auto?v=637726069450630000&width=800&height=auto&aspect=true', price:14.95, offer:false},
+      {name:'Fécula Maízena De Maíz Original 190 g', img:'https://walmartcr.vtexassets.com/arquivos/ids/447901/Fecula-Maizena-De-Maiz-Original-190gr-3-25959.jpg?v=638307348014530000', price:11.00, offer:false},
+      {name:'Jabón Pastilla Avena Protex 110 g', img:'https://www.protex-soap.com/content/dam/cp-sites/personal-care/protex-relaunch/es_do/products/protex-avena-110g.jpg', price:7.10, offer:false},
+      {name:'Shampoo Suavidad Hidratación Control Caspa Palmolive 750 ml', img:'https://walmartgt.vtexassets.com/arquivos/ids/767496/83862_01.jpg?v=638756871788100000', price:43.15, offer:false},
+      {name:'Preparado Pepián Malher 74 g', img:'https://latorremx.vtexassets.com/arquivos/ids/190332/7054-frontal.jpg?v=638494015800830000', price:7.30, offer:false},
+      {name:'Servilleta Dispensador White Cotton 100 und', img:'https://tse2.mm.bing.net/th/id/OIP.Q8rAJU4DGqBl2bePbeY9qQHaHa?rs=1&pid=ImgDetMain&o=7&rm=3', price:3.95, offer:false},
+      {name:'Fósforos Águila 10 und', img:'https://latorremx.vtexassets.com/arquivos/ids/172774/89452-frontal.jpg?v=637689631977400000', price:2.60, offer:false},
+      {name:'Encendedor De Bolsillo Bic 1 und', img:'https://latorremx.vtexassets.com/arquivos/ids/173557/2908-frontal.jpg?v=637726067936730000', price:12.60, offer:false},
+      {name:'Crema Dental Máxima Protección Colgate 75 ml', img:'https://www.colgate.com/content/dam/cp-sites/oral-care/oral-care-center/global/latam/products/colgate-crema-dental-maxima-proteccion-anticaries.png', price:9.95, offer:false},
+      {name:'Galleta María Gama 180 g', img:'https://famifel.com/wp-content/uploads/2024/02/1706718932_GALLETA2028129.jpg', price:6.90, offer:false},
+      {name:'Gaseosa Coca Cola Original 450 ml', img:'https://walmartgt.vtexassets.com/arquivos/ids/415985/Gaseosa-Coca-Cola-regular-450-ml-1-27583.jpg?v=638330998540030000', price:5.90, offer:false},
+      {name:'Galleta Waffle Vainilla Gama 12 Pack 240 g', img:'https://walmartni.vtexassets.com/arquivos/ids/250662/Galleta-Waffer-Gama-Gama-240gr-4-3258.jpg?v=638043934732630000', price:11.90, offer:false},
+      {name:'Frituras Cheetos Horneados Queso 142 g', img:'https://chalosgrocery.com/assets/uploads/3f942b297e7cdcda50d2381335b7749f.jpg', price:16.65, offer:false},
+      {name:'Frituras Tortrix Limón 180 g', img:'https://valleyxpressinc.com/wp-content/uploads/2021/04/tx-limon.jpg', price:12.60, offer:false},
+      {name:'Frituras Taqueritos Extremos Chile Toreado Yumies 180 g', img:'https://latorremx.vtexassets.com/arquivos/ids/174866-800-auto?v=637756950072770000&width=800&height=auto&aspect=true', price:10.25, offer:false},
+      {name:'Boquitas Chobix Chile Limón Señorial 100 g', img:'https://tse3.mm.bing.net/th/id/OIP.Q7RWmTaOih7K7UnhM-03owHaHa?rs=1&pid=ImgDetMain&o=7&rm=3', price:9.45, offer:false},
+      {name:'Cereal Honey Monster Marshmallows Stars 377 g', img:'https://naranjomarket.com/wp-content/uploads/2020/09/honey-moster-Stars.png', price:24.70, offer:false},
+      {name:'Cereal Choco Krispi 620 g', img:'https://cropafresh.com/wp-content/uploads/2023/04/Choco-Krispis.jpg', price:32.75, offer:true, originalPrice:36.00}
+  ]
+      let cart = [];
+
+    document.getElementsByName('client-type').forEach(radio => {
+      radio.addEventListener('change', () => {
+        const nitInput = document.getElementById('nit-value');
+        nitInput.style.display = document.querySelector('input[name="client-type"]:checked').value === 'NIT' ? 'block' : 'none';
+      });
+    });
+
+    function renderProducts() {
+      const showOffers = document.getElementById('show-offers').checked;
+      const container = document.getElementById('products-grid');
+      container.innerHTML = '';
+      products.forEach((product, idx) => {
+        if (showOffers && !product.offer) return;
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        let priceHtml = '';
+        if (product.offer && product.originalPrice) {
+          priceHtml = `<span class="price-original">Q${product.originalPrice.toFixed(2)}</span><span>Q${product.price.toFixed(2)}</span>`;
+        } else {
+          priceHtml = `<span>Q${product.price.toFixed(2)}</span>`;
+        }
+
+        card.innerHTML = `
+          <img src="${product.img}" alt="${product.name}" />
+          <h3>${product.name}</h3>
+          <p>${priceHtml}</p>
+          <button onclick="addToCart(${idx})">Agregar al carrito</button>
+        `;
+        container.appendChild(card);
+      });
+      updateCart();
+    }
+
+    function addToCart(index) {
+      cart.push(products[index]);
+      updateCart();
+    }
+
+    function updateCart() {
+      const items = document.getElementById('cart-items');
+      const count = document.getElementById('cart-count');
+      const totalElem = document.getElementById('cart-total');
+      items.innerHTML = '';
+      let total = 0;
+      cart.forEach((product, i) => {
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+
+        const spanText = document.createElement('span');
+        spanText.textContent = `${product.name} - Q${product.price.toFixed(2)}`;
+
+        const btnRemove = document.createElement('button');
+        btnRemove.textContent = '❌';
+        btnRemove.className = 'remove-btn';
+        btnRemove.onclick = () => {
+          cart.splice(i, 1);
+          updateCart();
+        };
+
+        div.appendChild(spanText);
+        div.appendChild(btnRemove);
+        items.appendChild(div);
+
+        total += product.price;
+      });
+      count.innerText = cart.length;
+      totalElem.innerText = total.toFixed(2);
+    }
+
+    function openCart() {
+      document.getElementById('overlay').style.display = 'block';
+      document.getElementById('cart-modal').style.display = 'block';
+    }
+
+    function closeCart() {
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('cart-modal').style.display = 'none';
+    }
+
+    function checkout() {
+      if (cart.length === 0) return alert('El carrito está vacío.');
+      const clientType = document.querySelector('input[name="client-type"]:checked').value;
+      const nit = clientType === 'NIT' ? document.getElementById('nit-value').value.trim() : 'CF';
+      if (clientType === 'NIT' && nit === '') {
+        alert('Por favor ingresa un NIT válido.');
+        return;
+      }
+      let factura = `Factura\nCliente: ${nit}\n\n`;
+      let total = 0;
+      cart.forEach(p => {
+        factura += `${p.name} - Q${p.price.toFixed(2)}\n`;
+        total += p.price;
+      });
+      factura += `\nTotal: Q${total.toFixed(2)}`;
+
+      const blob = new Blob([factura], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `factura_${Date.now()}.txt`;
+      a.click();
+
+      cart = [];
+      updateCart();
+      closeCart();
+
+      const checkmark = document.getElementById('checkmark');
+      checkmark.classList.add('show');
+      setTimeout(() => checkmark.classList.remove('show'), 1500);
+    }
+
+    renderProducts();
+  </script>
+</body>
+</html>
+
+
+  <!-- Pie de página con contactos -->
+  <footer id="contacto" style="background-color: var(--primary); color: white; padding: 2rem 1rem; text-align: center;">
+    <h2>Contáctanos</h2>
+    <p><img src="https://img.icons8.com/fluency/24/000000/whatsapp.png"/> WhatsApp: +502 3000-9783</p>
+    <p><img src="https://img.icons8.com/fluency/24/000000/instagram-new.png"/> Instagram:@ELSuperQuetzal </p>
+    <p><img src="https://img.icons8.com/fluency/24/000000/facebook-new.png"/> Facebook:Super Quetzal</p>
+    <p><img src="https://img.icons8.com/fluency/24/000000/tiktok.png"/> TikTok: @superquetzal</p>
+    <p><img src="https://img.icons8.com/fluency/24/000000/apple-mail.png"/> Correo: superquetzal@gmail.com</p>
+    <p><img src="https://img.icons8.com/fluency/24/000000/phone.png"/> Teléfono: +502 3655-4847</p>
+  </footer>
+
+  <script>
+
+  </script>
+</body>
